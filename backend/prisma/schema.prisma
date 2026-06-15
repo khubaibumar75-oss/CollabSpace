@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  googleId     String?  @unique @map("google_id")
+  githubId     String?  @unique @map("github_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  memberships  WorkspaceMember[]
+  resources    Resource[]
+  refreshTokens RefreshToken[]
+  invitesSent  WorkspaceInvite[] @relation("InvitedBy")
+
+  @@map("users")
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  members   WorkspaceMember[]
+  resources Resource[]
+  invites   WorkspaceInvite[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  userId      String @map("user_id")
+  workspaceId String @map("workspace_id")
+  role        Role   @default(MEMBER)
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, workspaceId])
+  @@map("workspace_members")
+}
+
+model Resource {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  userId      String?  @map("user_id")
+  title       String
+  url         String
+  tags        String[]
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("resources")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model WorkspaceInvite {
+  id          String   @id @default(uuid())
+  email       String
+  workspaceId String   @map("workspace_id")
+  role        Role     @default(MEMBER)
+  invitedById String   @map("invited_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([email, workspaceId])
+  @@map("workspace_invites")
+}
