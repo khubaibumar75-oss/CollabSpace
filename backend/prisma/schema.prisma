@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -20,10 +21,10 @@ model User {
   githubId     String?  @unique @map("github_id")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  memberships  WorkspaceMember[]
-  resources    Resource[]
+  memberships   WorkspaceMember[]
+  resources     Resource[]
   refreshTokens RefreshToken[]
-  invitesSent  WorkspaceInvite[] @relation("InvitedBy")
+  invitesSent   WorkspaceInvite[] @relation("InvitedBy")
 
   @@map("users")
 }
