@@ -75,13 +75,13 @@ export default function LoginPage() {
 
         <div className="flex gap-2">
           <a
-            href="/api/oauth/google"
+           href={`${import.meta.env.VITE_API_URL}/api/oauth/google`}
             className="flex-1 rounded border py-2 text-center text-sm hover:bg-gray-50"
           >
             Google
           </a>
           <a
-            href="/api/oauth/github"
+            href={`${import.meta.env.VITE_API_URL}/api/oauth/github`}
             className="flex-1 rounded border py-2 text-center text-sm hover:bg-gray-50"
           >
             GitHub

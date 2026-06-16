@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3001;
 // 3. Middlewares
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: "https://your-frontend.vercel.app",
     credentials: true,
   })
 );
