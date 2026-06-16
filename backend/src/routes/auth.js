@@ -17,8 +17,8 @@ const router = Router();
 function setRefreshCookie(res, token) {
   res.cookie("refreshToken", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
@@ -97,7 +97,11 @@ router.post("/logout", async (req, res) => {
   if (token) {
     await revokeRefreshToken(token);
   }
-  res.clearCookie("refreshToken");
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
   res.json({ message: "Logged out" });
 });
 
