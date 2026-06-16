@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://collab-space-d2a3.vercel.app"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -19,19 +19,22 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     async function init() {
-      // 1. If we don't have a token, try to refresh using the backend
+      // 1. If we don't have a token, try to refresh
       if (!getAccessToken()) {
         try {
           const data = await api("/auth/refresh", { method: "POST" });
           if (data?.accessToken) {
             setAccessToken(data.accessToken);
           }
-        } catch (err) {
+        } catch {
+          // No active session — stop here, don't call /auth/me
           console.log("No active session found.");
+          setLoading(false);
+          return;
         }
       }
-      
-      // 2. Fetch current user profile
+
+      // 2. Only runs if we have a valid token
       await fetchUser();
       setLoading(false);
     }
