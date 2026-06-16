@@ -16,15 +16,13 @@ const resourceRoutes = require("./routes/resources");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// 3. Middlewares
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowed = [
+      const allowedOrigins = [
         process.env.CLIENT_URL,
-        /\.vercel\.app$/,
       ];
-      if (!origin || allowed.some(p => typeof p === "string" ? p === origin : p.test(origin))) {
+      if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
