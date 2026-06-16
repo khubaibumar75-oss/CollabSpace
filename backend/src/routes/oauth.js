@@ -54,7 +54,6 @@ function setupOAuth() {
         {
           clientID: process.env.GITHUB_CLIENT_ID,
           clientSecret: process.env.GITHUB_CLIENT_SECRET,
-          // FIX: Now using absolute URL
           callbackURL: `${process.env.BACKEND_URL}/api/oauth/github/callback`,
           scope: ["user:email"],
         },
@@ -95,10 +94,11 @@ function setupOAuth() {
     const accessToken = signAccessToken({ userId: user.id, email: user.email });
     const refreshToken = await createRefreshToken(user.id);
 
+    // fixed: secure + sameSite for cross-domain
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -109,11 +109,17 @@ function setupOAuth() {
   if (process.env.GOOGLE_CLIENT_ID) {
     router.get(
       "/google",
-      passport.authenticate("google", { scope: ["profile", "email"], session: false })
+      passport.authenticate("google", {
+        scope: ["profile", "email"],
+        session: false,
+      })
     );
     router.get(
       "/google/callback",
-      passport.authenticate("google", { session: false, failureRedirect: `${clientUrl}/login?error=oauth_failed` }),
+      passport.authenticate("google", {
+        session: false,
+        failureRedirect: `${clientUrl}/login?error=oauth_failed`,
+      }),
       handleOAuthCallback
     );
   }
@@ -125,7 +131,10 @@ function setupOAuth() {
     );
     router.get(
       "/github/callback",
-      passport.authenticate("github", { session: false, failureRedirect: `${clientUrl}/login?error=oauth_failed` }),
+      passport.authenticate("github", {
+        session: false,
+        failureRedirect: `${clientUrl}/login?error=oauth_failed`,
+      }),
       handleOAuthCallback
     );
   }
