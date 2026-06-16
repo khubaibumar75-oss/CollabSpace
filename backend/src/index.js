@@ -19,7 +19,17 @@ const PORT = process.env.PORT || 3001;
 // 3. Middlewares
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: function (origin, callback) {
+      const allowed = [
+        process.env.CLIENT_URL,
+        /\.vercel\.app$/,
+      ];
+      if (!origin || allowed.some(p => typeof p === "string" ? p === origin : p.test(origin))) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
