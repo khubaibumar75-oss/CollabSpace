@@ -12,6 +12,9 @@ export default function DashboardPage() {
   const [url, setUrl] = useState("");
   const [tagsInput, setTagsInput] = useState("");
 
+  // ✅ ADD LOADING STATE
+  const [loading, setLoading] = useState(false);
+
   function loadResources() {
     if (!workspaceId) return;
     api(`/workspaces/${workspaceId}/resources`)
@@ -23,23 +26,36 @@ export default function DashboardPage() {
     loadResources();
   }, [workspaceId]);
 
+  // ✅ FIXED HANDLE ADD (PREVENT DOUBLE CLICK)
   async function handleAdd(e) {
     e.preventDefault();
-    const tags = tagsInput
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
 
-    await api(`/workspaces/${workspaceId}/resources`, {
-      method: "POST",
-      body: JSON.stringify({ title, url, tags }),
-    });
+    if (loading) return; // 🚫 block double submit
 
-    setTitle("");
-    setUrl("");
-    setTagsInput("");
-    setShowForm(false);
-    loadResources();
+    setLoading(true);
+
+    try {
+      const tags = tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      await api(`/workspaces/${workspaceId}/resources`, {
+        method: "POST",
+        body: JSON.stringify({ title, url, tags }),
+      });
+
+      setTitle("");
+      setUrl("");
+      setTagsInput("");
+      setShowForm(false);
+
+      loadResources();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const filtered = resources.filter((r) => {
@@ -47,7 +63,9 @@ export default function DashboardPage() {
       !search ||
       r.title.toLowerCase().includes(search.toLowerCase()) ||
       r.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+
     const matchesTag = !activeTag || r.tags.includes(activeTag);
+
     return matchesSearch && matchesTag;
   });
 
@@ -63,9 +81,11 @@ export default function DashboardPage() {
           placeholder="Search resources..."
           className="w-full rounded border px-3 py-2 text-sm sm:flex-1"
         />
+
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="w-full rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 sm:w-auto"
+          onClick={() => !loading && setShowForm(!showForm)}
+          disabled={loading}
+          className="w-full rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 sm:w-auto disabled:opacity-50"
         >
           {showForm ? "Cancel" : "Add Resource"}
         </button>
@@ -82,6 +102,7 @@ export default function DashboardPage() {
           >
             All
           </button>
+
           {allTags.map((tag) => (
             <button
               key={tag}
@@ -110,6 +131,7 @@ export default function DashboardPage() {
               required
               className="rounded border px-3 py-2 text-sm"
             />
+
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -118,6 +140,7 @@ export default function DashboardPage() {
               required
               className="rounded border px-3 py-2 text-sm"
             />
+
             <input
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
@@ -125,9 +148,12 @@ export default function DashboardPage() {
               className="rounded border px-3 py-2 text-sm"
             />
           </div>
+
+          {/* Save Button */}
           <button
             type="submit"
-            className="mt-3 w-full rounded bg-indigo-600 px-4 py-2 text-sm text-white sm:w-auto"
+            disabled={loading}
+            className="mt-3 w-full rounded bg-indigo-600 px-4 py-2 text-sm text-white sm:w-auto disabled:opacity-50"
           >
             Save
           </button>
@@ -149,9 +175,13 @@ export default function DashboardPage() {
             >
               <h3 className="font-semibold">{r.title}</h3>
               <p className="mt-1 truncate text-xs text-gray-400">{r.url}</p>
+
               {r.user && (
-                <p className="mt-1 text-xs text-gray-400">by {r.user.email}</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  by {r.user.email}
+                </p>
               )}
+
               <div className="mt-2 flex flex-wrap gap-1">
                 {r.tags.map((tag) => (
                   <span
